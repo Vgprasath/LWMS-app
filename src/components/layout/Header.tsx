@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, Moon, Search, Sun } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Header: React.FC = () => {
@@ -28,10 +28,6 @@ const Header: React.FC = () => {
         
         <button className="p-2 rounded-full hover:bg-secondary/80 transition-colors">
           <Bell className="h-5 w-5 text-muted-foreground" />
-        </button>
-        
-        <button className="p-2 rounded-full hover:bg-secondary/80 transition-colors">
-          <Sun className="h-5 w-5 text-muted-foreground" />
         </button>
         
         <div className="flex items-center space-x-2">
