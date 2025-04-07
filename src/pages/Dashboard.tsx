@@ -2,6 +2,7 @@
 import React from 'react';
 import DashboardCards from '@/components/dashboard/DashboardCards';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
+import AIAssistant from '@/components/ai/AIAssistant';
 
 const Dashboard: React.FC = () => {
   return (
@@ -43,6 +44,9 @@ const Dashboard: React.FC = () => {
           ))}
         </div>
       </div>
+      
+      {/* Add AI Assistant */}
+      <AIAssistant />
     </div>
   );
 };
