@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Download } from 'lucide-react';
 import InventoryTable, { InventoryItem } from '@/components/inventory/InventoryTable';
 import InventoryForm, { Category, Warehouse } from '@/components/inventory/InventoryForm';
 import { toast } from '@/hooks/use-toast';
+import { exportToExcel } from '@/utils/exportUtils';
 
 // Mock data generator
 const generateMockInventory = (): InventoryItem[] => {
@@ -92,6 +93,7 @@ const Inventory: React.FC = () => {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [lastUpdatedFilter, setLastUpdatedFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   
   // Load mock data
   useEffect(() => {
@@ -185,11 +187,46 @@ const Inventory: React.FC = () => {
     } else {
       handleAddItem(item);
     }
+    setIsFormOpen(false);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingItem(null);
+  };
+
+  const handleExportInventory = () => {
+    exportToExcel(inventoryItems, 'inventory-report');
+    toast({
+      title: 'Export Complete',
+      description: 'Inventory report has been downloaded.',
+    });
+  };
+
+  const getFilteredInventoryItems = () => {
+    if (lastUpdatedFilter === 'all') {
+      return inventoryItems;
+    }
+    
+    const now = new Date();
+    let compareDate = new Date();
+    
+    switch (lastUpdatedFilter) {
+      case 'today':
+        compareDate.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        compareDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        compareDate.setMonth(now.getMonth() - 1);
+        break;
+    }
+    
+    return inventoryItems.filter(item => {
+      const itemDate = new Date(item.lastUpdated);
+      return itemDate >= compareDate;
+    });
   };
 
   return (
@@ -202,13 +239,36 @@ const Inventory: React.FC = () => {
           </p>
         </div>
         
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 rounded-lg bg-primary text-white flex items-center space-x-2 hover:bg-primary/90 transition-colors"
-        >
-          <Plus size={18} />
-          <span>Add Item</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <select
+              className="px-3 py-2 rounded-lg border bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+              value={lastUpdatedFilter}
+              onChange={(e) => setLastUpdatedFilter(e.target.value as any)}
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+            </select>
+          </div>
+          
+          <button
+            onClick={handleExportInventory}
+            className="px-4 py-2 rounded-lg bg-secondary text-foreground flex items-center space-x-2 hover:bg-secondary/80 transition-colors"
+          >
+            <Download size={18} />
+            <span>Export</span>
+          </button>
+          
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="px-4 py-2 rounded-lg bg-primary text-white flex items-center space-x-2 hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={18} />
+            <span>Add Item</span>
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -253,12 +313,12 @@ const Inventory: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Total Items</p>
               <p className="text-2xl font-semibold">
-                {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)}
+                {getFilteredInventoryItems().reduce((sum, item) => sum + item.quantity, 0)}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Unique Items</p>
-              <p className="text-2xl font-semibold">{inventoryItems.length}</p>
+              <p className="text-2xl font-semibold">{getFilteredInventoryItems().length}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Categories</p>
@@ -269,7 +329,7 @@ const Inventory: React.FC = () => {
       </div>
       
       <InventoryTable
-        items={inventoryItems}
+        items={getFilteredInventoryItems()}
         onEdit={handleEditItem}
         onDelete={handleDeleteItem}
       />

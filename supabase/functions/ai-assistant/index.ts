@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 // Use environment variable for OpenAI API key
-const openAIKey = Deno.env.get("OPENAI_API_KEY");
+const openAIKey = Deno.env.get("OPENAI_API_KEY") || "AIzaSyA5SQ9BRFMyfl7Efez6jkWcTCY55vPnZ4Q";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +51,12 @@ serve(async (req) => {
     });
 
     const data_response = await response.json();
+    
+    // Check if the API response contains the expected structure
+    if (!data_response.choices || !data_response.choices[0] || !data_response.choices[0].message) {
+      throw new Error("Invalid response structure from OpenAI API");
+    }
+
     const aiResponse = data_response.choices[0].message.content;
 
     return new Response(JSON.stringify({ 

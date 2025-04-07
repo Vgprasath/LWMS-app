@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, SendHorizontal, BarChart2, PieChart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -13,6 +13,7 @@ const AIAssistant: React.FC = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   const [showPromptSuggestions, setShowPromptSuggestions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const promptSuggestions = [
     "Generate a report on inventory turnover rates by category",
@@ -54,6 +55,7 @@ const AIAssistant: React.FC = () => {
     
     setLoading(true);
     setResponse(null);
+    setError(null);
     setShowPromptSuggestions(false);
     
     try {
@@ -61,11 +63,19 @@ const AIAssistant: React.FC = () => {
       const warehouseData = await fetchWarehouseData();
       
       // Call the Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('ai-assistant', {
+      const { data, error: supabaseError } = await supabase.functions.invoke('ai-assistant', {
         body: { prompt, data: warehouseData },
       });
       
-      if (error) throw error;
+      if (supabaseError) {
+        console.error('Supabase function error:', supabaseError);
+        throw new Error(supabaseError.message);
+      }
+      
+      if (data.error) {
+        console.error('AI assistant error:', data.error);
+        throw new Error(data.error);
+      }
       
       setResponse(data.response);
       toast({
@@ -83,6 +93,7 @@ const AIAssistant: React.FC = () => {
       
     } catch (error) {
       console.error('Error calling AI assistant:', error);
+      setError(error.message || 'Failed to get a response from the AI assistant');
       toast({
         title: 'Error',
         description: 'Failed to get a response from the AI assistant. Please try again.',
@@ -108,6 +119,22 @@ const AIAssistant: React.FC = () => {
       promptInputRef.current.focus();
     }
   };
+
+  // Close the suggestion dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showPromptSuggestions && 
+          promptInputRef.current && 
+          !promptInputRef.current.contains(e.target as Node)) {
+        setShowPromptSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPromptSuggestions]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -145,6 +172,12 @@ const AIAssistant: React.FC = () => {
                 <ReactMarkdown className="prose prose-sm max-w-none">
                   {response}
                 </ReactMarkdown>
+              </div>
+            ) : error ? (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                <p className="font-medium mb-2">Error:</p>
+                <p>{error}</p>
+                <p className="mt-2 text-sm">Please try again or contact support if the issue persists.</p>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-center text-muted-foreground p-4">
