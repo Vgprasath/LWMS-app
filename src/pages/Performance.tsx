@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { Check, Download, TrendingUp } from 'lucide-react';
+import { exportToExcel, formatPerformanceDataForExport } from '@/utils/exportUtils';
+import { toast } from '@/hooks/use-toast';
 
 // Sample performance data
 const inventoryPerformance = [
@@ -48,11 +49,35 @@ const kpis = [
   { name: 'Labor Efficiency', value: '88.3%', change: '+2.7%', trend: 'up' },
 ];
 
-// Pie chart colors
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const Performance: React.FC = () => {
   const [timeRange, setTimeRange] = useState('6months');
+  
+  const handleExport = () => {
+    // Format KPIs for export
+    const kpiData = kpis.map(kpi => ({
+      Metric: kpi.name,
+      Value: kpi.value,
+      Change: kpi.change,
+      Trend: kpi.trend
+    }));
+    
+    // Export data
+    try {
+      exportToExcel(kpiData, `performance_report_${new Date().toISOString().split('T')[0]}`);
+      toast({
+        title: "Export Successful",
+        description: "The performance report has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Unable to export data. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -76,7 +101,10 @@ const Performance: React.FC = () => {
             <option value="1year">Last Year</option>
           </select>
           
-          <button className="px-4 py-2 rounded-lg border bg-white hover:bg-secondary transition-colors flex items-center space-x-2">
+          <button 
+            onClick={handleExport}
+            className="px-4 py-2 rounded-lg border bg-white hover:bg-secondary transition-colors flex items-center space-x-2"
+          >
             <Download size={16} />
             <span>Export</span>
           </button>
