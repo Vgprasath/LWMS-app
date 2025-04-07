@@ -42,16 +42,21 @@ export const exportToCSV = (data: any[], filename: string) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  // Clean up the URL object after download
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 };
 
 /**
- * Export data to Excel format (actually CSV but with Excel extension)
+ * Export data to Excel format (XLSX)
  * @param data Array of objects to export
  * @param filename Filename for the downloaded file
  */
 export const exportToExcel = (data: any[], filename: string) => {
-  // Using CSV for Excel as well since browsers don't have native Excel export
-  exportToCSV(data, `${filename}.xlsx`);
+  // Using CSV for Excel export
+  exportToCSV(data, `${filename}`);
 };
 
 /**
@@ -68,4 +73,21 @@ export const formatPerformanceDataForExport = (metrics: any[]) => {
     Trend: metric.trend,
     Date: new Date(metric.date).toLocaleDateString()
   }));
+};
+
+/**
+ * Export current page data to chosen format
+ * @param data Current page data to export
+ * @param format Format to export (csv or excel)
+ * @param moduleName Name of the module (for filename)
+ */
+export const exportCurrentData = (data: any[], format: 'csv' | 'excel', moduleName: string) => {
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const filename = `${moduleName}_export_${timestamp}`;
+  
+  if (format === 'csv') {
+    exportToCSV(data, filename);
+  } else {
+    exportToExcel(data, `${filename}.xlsx`);
+  }
 };

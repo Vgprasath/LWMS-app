@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
@@ -74,7 +75,7 @@ const Sidebar: React.FC = () => {
             <>
               <div className="px-4 py-2 mb-2">
                 <p className="text-xs text-muted-foreground">Logged in as</p>
-                <p className="font-medium truncate">{user?.name}</p>
+                <p className="font-medium truncate">{user?.name || 'User'}</p>
               </div>
               <button
                 onClick={logout}

@@ -14,24 +14,25 @@ import './App.css';
 // Import AIAssistantProvider
 import AIAssistantProvider from '@/components/ai/AIAssistantProvider';
 
-// Add AIAssistantProvider to the application layout
 function App() {
   return (
-    <div className="app">
+    <div className="app flex h-screen overflow-hidden">
       <Router>
         <Sidebar />
-        <div className="content">
+        <div className="content flex-1 flex flex-col overflow-hidden">
           <Header />
+          <div className="flex-1 overflow-auto p-6 relative">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/shipment" element={<Shipment />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/space" element={<Space />} />
+              <Route path="/performance" element={<Performance />} />
+            </Routes>
+          </div>
           <AIAssistantProvider />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/shipment" element={<Shipment />} />
-            <Route path="/maintenance" element={<Maintenance />} />
-            <Route path="/space" element={<Space />} />
-            <Route path="/performance" element={<Performance />} />
-          </Routes>
         </div>
       </Router>
     </div>

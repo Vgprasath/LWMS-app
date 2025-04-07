@@ -1,16 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Bot, Send, X, Maximize2, Minimize2, ChevronDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
-// Mock AI responses
-const mockResponses = [
-  "I'm analyzing the warehouse data now...",
-  "Based on current inventory trends, I recommend optimizing storage for fast-moving items.",
-  "Your shipment efficiency has improved by 12% this month!",
-  "I've detected potential stockout risks for 3 items. Would you like to see the details?",
-  "The maintenance schedule for conveyor system #4 is due next week.",
-];
+// Import the data services to access warehouse data
+import { fetchInventoryItems, fetchWarehouses, fetchShipments, fetchEquipment, fetchMaintenanceRecords } from '@/services/databaseService';
 
 const AIAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,22 +15,105 @@ const AIAssistant: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [warehouseData, setWarehouseData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
-  // Suggested prompts
-  const suggestedPrompts = [
-    "Generate a performance report",
-    "Analyze inventory turnover",
-    "Optimize warehouse layout",
-    "Forecast shipment needs",
-    "Schedule maintenance tasks"
-  ];
+  // Suggested prompts based on current page
+  const getPageSpecificPrompts = () => {
+    const path = location.pathname;
+    const commonPrompts = [
+      "Generate a performance report",
+      "Analyze inventory turnover"
+    ];
+    
+    if (path.includes('inventory')) {
+      return [
+        ...commonPrompts,
+        "Check low stock items",
+        "Analyze inventory by category",
+        "Suggest inventory reordering"
+      ];
+    } else if (path.includes('shipment')) {
+      return [
+        ...commonPrompts,
+        "Track pending shipments",
+        "Analyze delivery times",
+        "Optimize shipping routes"
+      ];
+    } else if (path.includes('maintenance')) {
+      return [
+        ...commonPrompts,
+        "Schedule equipment maintenance",
+        "Check maintenance history",
+        "Predict maintenance needs"
+      ];
+    } else if (path.includes('space')) {
+      return [
+        ...commonPrompts,
+        "Optimize warehouse layout",
+        "Analyze space utilization",
+        "Suggest storage improvements"
+      ];
+    } else if (path.includes('performance')) {
+      return [
+        ...commonPrompts,
+        "Generate KPI report",
+        "Compare monthly performance",
+        "Identify performance bottlenecks"
+      ];
+    } else {
+      // Default prompts for dashboard or other pages
+      return [
+        "Generate a performance report",
+        "Analyze inventory turnover",
+        "Optimize warehouse layout",
+        "Forecast shipment needs",
+        "Schedule maintenance tasks"
+      ];
+    }
+  };
 
+  const suggestedPrompts = getPageSpecificPrompts();
+
+  // Fetch warehouse data for AI analysis
+  useEffect(() => {
+    const loadWarehouseData = async () => {
+      try {
+        const [inventory, warehouses, shipments, equipment, maintenance] = await Promise.all([
+          fetchInventoryItems(),
+          fetchWarehouses(),
+          fetchShipments(),
+          fetchEquipment(),
+          fetchMaintenanceRecords()
+        ]);
+        
+        setWarehouseData({
+          inventory,
+          warehouses,
+          shipments,
+          equipment,
+          maintenance
+        });
+      } catch (error) {
+        console.error("Error loading warehouse data for AI:", error);
+      }
+    };
+    
+    loadWarehouseData();
+  }, []);
+
+  // Scroll to bottom of messages when new messages are added
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Update prompts when location changes
+  useEffect(() => {
+    // This will refresh the suggested prompts when the page changes
+  }, [location.pathname]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -47,12 +125,50 @@ const AIAssistant: React.FC = () => {
     setIsTyping(true);
     
     try {
-      // In a real app, this would call an API to get AI response
-      // For now, use mock responses
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In a real implementation, this would call the AI assistant edge function
+      // For now, we'll simulate an intelligent response based on the query and available data
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Select a random response from mockResponses
-      const aiResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+      let aiResponse = "I'm analyzing your request...";
+      
+      // Generate a more intelligent response based on the user query and page context
+      const userQuery = inputValue.toLowerCase();
+      const currentPage = location.pathname.slice(1) || 'dashboard';
+      
+      if (userQuery.includes('inventory') || currentPage === 'inventory') {
+        if (warehouseData?.inventory?.length > 0) {
+          const totalItems = warehouseData.inventory.length;
+          const lowStockItems = warehouseData.inventory.filter((item: any) => item.quantity < 10).length;
+          aiResponse = `Based on the inventory data, you have ${totalItems} items in total, with ${lowStockItems} items currently low in stock. Would you like to see a detailed report or reordering recommendations?`;
+        } else {
+          aiResponse = "I can help you analyze your inventory. Try adding some items first, or I can suggest an inventory management strategy for your warehouse.";
+        }
+      } else if (userQuery.includes('shipment') || currentPage === 'shipment') {
+        if (warehouseData?.shipments?.length > 0) {
+          const pendingShipments = warehouseData.shipments.filter((s: any) => s.status === 'pending').length;
+          aiResponse = `You currently have ${pendingShipments} pending shipments. I can help you optimize delivery routes or track shipment status. What would you like to know?`;
+        } else {
+          aiResponse = "I can help you manage your shipments. Would you like recommendations on shipping logistics or tracking systems?";
+        }
+      } else if (userQuery.includes('maintenance') || currentPage === 'maintenance') {
+        if (warehouseData?.maintenance?.length > 0) {
+          const upcomingMaintenance = warehouseData.maintenance.filter((m: any) => 
+            m.status !== 'completed' && new Date(m.scheduledDate) > new Date()
+          ).length;
+          aiResponse = `You have ${upcomingMaintenance} upcoming maintenance tasks. I can help you optimize your maintenance schedule. Would you like me to suggest priorities?`;
+        } else {
+          aiResponse = "I can help you set up a preventive maintenance schedule for your equipment. Would you like some recommendations?";
+        }
+      } else if (userQuery.includes('export') || userQuery.includes('report')) {
+        aiResponse = "I can help you export data or generate reports. You can use the export button in each module to download the current data as a CSV or Excel file. What specific data would you like to export?";
+      } else if (userQuery.includes('performance') || currentPage === 'performance') {
+        aiResponse = "I can analyze your warehouse performance metrics. Would you like to see KPIs, efficiency trends, or improvement recommendations?";
+      } else if (userQuery.includes('space') || currentPage === 'space') {
+        aiResponse = "I can help you optimize your warehouse space utilization. Would you like recommendations on layout improvements or storage efficiency?";
+      } else {
+        // General response for other queries
+        aiResponse = "I'm here to help with your warehouse management needs. I can assist with inventory analysis, shipment tracking, maintenance scheduling, space optimization, and performance metrics. What would you like to focus on?";
+      }
       
       setMessages(prev => [...prev, { text: aiResponse, sender: 'ai' }]);
     } catch (error) {
@@ -74,7 +190,7 @@ const AIAssistant: React.FC = () => {
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 rounded-full bg-primary text-white shadow-lg hover:bg-primary/90 transition-all z-50"
+        className="p-4 rounded-full bg-primary text-white shadow-lg hover:bg-primary/90 transition-all z-50"
         aria-label="Open AI Assistant"
       >
         <Bot size={24} />
@@ -84,7 +200,7 @@ const AIAssistant: React.FC = () => {
 
   return (
     <div 
-      className={`fixed ${isMinimized ? 'bottom-6 right-6 w-auto h-auto' : 'bottom-6 right-6 w-80 sm:w-96 h-[500px] max-h-[80vh]'} 
+      className={`${isMinimized ? 'w-auto h-auto' : 'w-80 sm:w-96 h-[500px] max-h-[80vh]'} 
       glass-panel rounded-lg shadow-xl z-50 flex flex-col overflow-hidden transition-all duration-300`}
     >
       {/* Header */}
