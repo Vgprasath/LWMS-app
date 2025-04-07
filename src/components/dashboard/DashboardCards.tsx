@@ -51,39 +51,57 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, descrip
   );
 };
 
-const DashboardCards: React.FC = () => {
+interface DashboardCardsProps {
+  inventoryCount: number;
+  warehouseUtilization: number;
+  pendingShipments: number;
+  maintenanceCount: number;
+}
+
+const DashboardCards: React.FC<DashboardCardsProps> = ({
+  inventoryCount,
+  warehouseUtilization,
+  pendingShipments,
+  maintenanceCount
+}) => {
+  // Calculate some mock changes for demonstration
+  const inventoryChange = 8.1; // Mock percentage change
+  const utilizationChange = warehouseUtilization > 75 ? -2.3 : 3.5;
+  const shipmentChange = pendingShipments > 30 ? 5.7 : -4.2;
+  const maintenanceChange = maintenanceCount > 5 ? -12.5 : 8.3;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
         title="Total Inventory"
-        value="1,234"
-        change={8.1}
+        value={inventoryCount || 0}
+        change={inventoryChange}
         icon={<Box size={24} className="text-primary" />}
-        description="124 items added this month"
+        description={`${Math.floor(inventoryCount * 0.1)} items added this month`}
       />
       
       <StatCard
         title="Space Utilization"
-        value="78%"
-        change={-2.3}
+        value={`${warehouseUtilization || 0}%`}
+        change={utilizationChange}
         icon={<Warehouse size={24} className="text-primary" />}
         description="3 warehouses active"
       />
       
       <StatCard
         title="Pending Shipments"
-        value="42"
-        change={5.7}
+        value={pendingShipments || 0}
+        change={shipmentChange}
         icon={<Truck size={24} className="text-primary" />}
-        description="12 dispatched today"
+        description={`${Math.floor(pendingShipments * 0.3)} dispatched today`}
       />
       
       <StatCard
         title="Maintenance Tickets"
-        value="8"
-        change={-12.5}
+        value={maintenanceCount || 0}
+        change={maintenanceChange}
         icon={<ShieldCheck size={24} className="text-primary" />}
-        description="3 high priority"
+        description={`${Math.ceil(maintenanceCount * 0.4)} high priority`}
       />
     </div>
   );
