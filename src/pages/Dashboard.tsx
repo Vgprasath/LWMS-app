@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardCards from '@/components/dashboard/DashboardCards';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import AIAssistant from '@/components/ai/AIAssistant';
-import { fetchInventoryItems, fetchWarehouses, fetchShipments, fetchEquipment, fetchMaintenanceRecords } from '@/services/databaseService';
+import { fetchInventoryItems, fetchWarehouses, fetchShipments, fetchEquipment, fetchMaintenanceRecords, Shipment as DbShipment } from '@/services/databaseService';
 
 interface Shipment {
   id: string;
@@ -48,8 +48,7 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // Fetch all data needed for the dashboard
-        const [inventory, warehouses, shipments, equipment, maintenance] = await Promise.all([
+        const [inventory, warehouses, dbShipments, equipment, maintenance] = await Promise.all([
           fetchInventoryItems(),
           fetchWarehouses(),
           fetchShipments(),
@@ -57,7 +56,13 @@ const Dashboard: React.FC = () => {
           fetchMaintenanceRecords()
         ]);
 
-        // Generate activities based on recent data
+        const shipments: Shipment[] = dbShipments.map(s => ({
+          id: s.id,
+          name: `${s.origin} to ${s.destination}`,
+          departureDate: s.departureDate,
+          status: s.status
+        }));
+
         const allActivities = [
           ...shipments.slice(0, 2).map(s => ({ 
             title: `New shipment created: ${s.name}`,
@@ -205,7 +210,7 @@ const processInventoryData = (inventory: any[]) => {
   return Array.from(categoryMap).map(([name, value]) => ({ name, value }));
 };
 
-const processShipmentData = (shipments: any[], timeRange: string) => {
+const processShipmentData = (shipments: Shipment[], timeRange: string) => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
   
   return months.map(name => {
