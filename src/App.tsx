@@ -16,24 +16,26 @@ import AIAssistantProvider from '@/components/ai/AIAssistantProvider';
 
 function App() {
   return (
-    <div className="app flex h-screen overflow-hidden">
+    <div className="app flex h-screen w-full overflow-hidden">
       <Router>
-        <Sidebar />
-        <div className="content flex-1 flex flex-col overflow-hidden">
-          <Header />
-          <div className="flex-1 overflow-auto p-6 relative">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/shipment" element={<Shipment />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/space" element={<Space />} />
-              <Route path="/performance" element={<Performance />} />
-            </Routes>
+        <div className="flex h-full w-full">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <div className="flex-1 overflow-auto p-4">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/shipment" element={<Shipment />} />
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/space" element={<Space />} />
+                <Route path="/performance" element={<Performance />} />
+              </Routes>
+            </div>
           </div>
-          <AIAssistantProvider />
         </div>
+        <AIAssistantProvider />
       </Router>
     </div>
   );
