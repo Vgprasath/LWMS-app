@@ -1,18 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardCards from '@/components/dashboard/DashboardCards';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import AIAssistant from '@/components/ai/AIAssistant';
 import { fetchInventoryItems, fetchWarehouses, fetchShipments, fetchEquipment, fetchMaintenanceRecords } from '@/services/databaseService';
 
+interface Shipment {
+  id: string;
+  name: string;
+  departureDate: string;
+  status: string;
+}
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  lastUpdated: string;
+}
+
+interface MaintenanceTask {
+  id: string;
+  equipmentId: string;
+  equipmentName: string;
+  scheduledDate: string;
+  status: string;
+}
+
 const Dashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('7days');
   const [dashboardData, setDashboardData] = useState<{
-    inventory: any[];
+    inventory: InventoryItem[];
     warehouses: any[];
-    shipments: any[];
+    shipments: Shipment[];
     equipment: any[];
-    maintenance: any[];
+    maintenance: MaintenanceTask[];
     activities: any[];
   }>({
     inventory: [],
@@ -40,28 +60,28 @@ const Dashboard: React.FC = () => {
         // Generate activities based on recent data
         const allActivities = [
           ...shipments.slice(0, 2).map(s => ({ 
-            title: `New shipment created: ${s.itemName}`, 
-            time: getRelativeTime(s.departureDate), 
+            title: `New shipment created: ${s.name}`,
+            time: getRelativeTime(s.departureDate),
             user: 'Logistics Manager' 
           })),
           ...inventory.slice(0, 2).map(i => ({ 
-            title: `Inventory updated: ${i.name}`, 
-            time: getRelativeTime(i.lastUpdated), 
+            title: `Inventory updated: ${i.name}`,
+            time: getRelativeTime(i.lastUpdated),
             user: 'Inventory Specialist' 
           })),
           ...maintenance.slice(0, 2).map(m => ({ 
-            title: `Maintenance ${m.status}: ${m.equipmentName}`, 
-            time: getRelativeTime(m.startDate), 
+            title: `Maintenance ${m.status}: ${m.equipmentName}`,
+            time: getRelativeTime(m.scheduledDate),
             user: 'Maintenance Staff' 
           })),
           { 
-            title: 'Space allocation changed', 
-            time: '5 hours ago', 
+            title: 'Space allocation changed',
+            time: '5 hours ago',
             user: 'Warehouse Manager' 
           },
           { 
-            title: 'Performance report generated', 
-            time: 'Yesterday', 
+            title: 'Performance report generated',
+            time: 'Yesterday',
             user: 'Admin User' 
           },
         ];
@@ -84,10 +104,10 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, [timeRange]);
 
-  // Helper function to get relative time
-  const getRelativeTime = (date: Date) => {
+  const getRelativeTime = (dateStr: string) => {
     const now = new Date();
-    const diff = now.getTime() - new Date(date).getTime();
+    const inputDate = new Date(dateStr);
+    const diff = now.getTime() - inputDate.getTime();
     
     const minutes = Math.floor(diff / 60000);
     if (minutes < 60) return `${minutes} minutes ago`;
@@ -162,7 +182,6 @@ const Dashboard: React.FC = () => {
   );
 };
 
-// Helper function to calculate warehouse utilization
 const calculateWarehouseUtilization = (warehouses: any[]) => {
   if (!warehouses.length) return 0;
   
@@ -172,7 +191,6 @@ const calculateWarehouseUtilization = (warehouses: any[]) => {
   return Math.round((totalUsed / totalCapacity) * 100);
 };
 
-// Process inventory data for charts
 const processInventoryData = (inventory: any[]) => {
   const categoryMap = new Map();
   
@@ -187,11 +205,7 @@ const processInventoryData = (inventory: any[]) => {
   return Array.from(categoryMap).map(([name, value]) => ({ name, value }));
 };
 
-// Process shipment data for charts
 const processShipmentData = (shipments: any[], timeRange: string) => {
-  // In a real app, this would filter by date based on timeRange
-  // For now, we'll generate mock data based on existing shipments
-  
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
   
   return months.map(name => {
@@ -203,14 +217,12 @@ const processShipmentData = (shipments: any[], timeRange: string) => {
   });
 };
 
-// Generate performance data
 const generatePerformanceData = (timeRange: string) => {
-  // This could be based on actual metrics in a real app
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
   return days.map(name => ({
     name,
-    efficiency: Math.floor(Math.random() * 20) + 75 // Random efficiency between 75-95%
+    efficiency: Math.floor(Math.random() * 20) + 75
   }));
 };
 

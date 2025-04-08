@@ -91,6 +91,16 @@ export const exportToJSON = (data: any[], filename: string) => {
   }
 };
 
+// Function for formatting performance data for export
+export const formatPerformanceDataForExport = (data: any[]) => {
+  // If we need specific formatting for performance data
+  return data.map(item => ({
+    ...item,
+    // Add any specific formatting here if needed
+    formattedDate: new Date(item.date).toLocaleDateString(),
+  }));
+};
+
 // Function to let user choose export format
 export const exportData = (data: any[], filename: string, format: 'csv' | 'excel' | 'json' = 'excel') => {
   switch (format) {
