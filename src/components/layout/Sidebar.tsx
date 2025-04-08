@@ -1,16 +1,18 @@
 
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   BarChart, Box, Calendar, ChevronLeft, ChevronRight, 
-  ClipboardList, Home, Package, Settings, ShieldCheck, Truck, Warehouse 
+  ClipboardList, Home, Package, Settings, ShieldCheck, Truck, Warehouse, LogOut 
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <Home size={20} /> },
@@ -20,6 +22,15 @@ const Sidebar: React.FC = () => {
     { path: '/maintenance', label: 'Maintenance', icon: <ShieldCheck size={20} /> },
     { path: '/performance', label: 'Performance', icon: <BarChart size={20} /> },
   ];
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: 'Logged out',
+      description: 'You have been successfully logged out.',
+    });
+    navigate('/login');
+  };
 
   return (
     <div 
@@ -78,20 +89,20 @@ const Sidebar: React.FC = () => {
                 <p className="font-medium truncate">{user?.name || 'User'}</p>
               </div>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="w-full flex items-center px-4 py-2 rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
               >
-                <Settings size={18} />
+                <LogOut size={18} />
                 <span className="ml-3">Logout</span>
               </button>
             </>
           )}
           {collapsed && (
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full flex justify-center p-2 rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
             >
-              <Settings size={18} />
+              <LogOut size={18} />
             </button>
           )}
         </div>

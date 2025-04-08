@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Download, Package, Plus, Search, TrendingUp, Truck } from 'lucide-react';
 import { exportToExcel } from '@/utils/exportUtils';
 import { toast } from '@/hooks/use-toast';
+import ShipmentForm from '@/components/shipment/ShipmentForm';
+import { fetchInventoryItems } from '@/services/databaseService';
 
 // Define shipment types
 type ShipmentStatus = 'pending' | 'dispatched' | 'delivered';
@@ -39,6 +40,7 @@ const Shipment: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [inventory, setInventory] = useState<any[]>([]);
   
   // Mock data for shipments
   useEffect(() => {
@@ -102,6 +104,18 @@ const Shipment: React.FC = () => {
     
     setShipments(mockShipments);
     setFilteredShipments(mockShipments);
+    
+    // Fetch inventory items for the form
+    const getInventory = async () => {
+      try {
+        const items = await fetchInventoryItems();
+        setInventory(items);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+      }
+    };
+    
+    getInventory();
   }, []);
   
   // Filter shipments based on status, date and search term
@@ -169,6 +183,29 @@ const Shipment: React.FC = () => {
   const handleAddShipment = () => {
     setEditingShipment(null);
     setIsFormOpen(true);
+  };
+  
+  // Handle form submission
+  const handleFormSubmit = (data: any) => {
+    const newShipment = {
+      id: `SH-${1000 + shipments.length + 1}`,
+      itemId: data.items[0].itemId,
+      itemName: data.items[0].itemName,
+      quantity: data.items[0].quantity,
+      origin: data.origin,
+      destination: data.destination,
+      status: 'pending' as ShipmentStatus,
+      estimatedDelivery: data.estimatedArrival,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    
+    setShipments([newShipment, ...shipments]);
+    setIsFormOpen(false);
+    
+    toast({
+      title: 'Shipment Created',
+      description: `New shipment to ${data.destination} has been created.`,
+    });
   };
   
   return (
@@ -385,6 +422,13 @@ const Shipment: React.FC = () => {
           ))}
         </div>
       </div>
+      
+      <ShipmentForm 
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleFormSubmit}
+        inventory={inventory}
+      />
     </div>
   );
 };
