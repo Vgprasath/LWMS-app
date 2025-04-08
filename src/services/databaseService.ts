@@ -1,234 +1,369 @@
 
-import { supabase } from "@/integrations/supabase/client";
+// Mock database service for the AI assistant to reference
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  categoryId: string;
+  categoryName: string;
+  warehouseId: string;
+  warehouseName: string;
+  location: string;
+  lastUpdated: string;
+}
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
-  description: string;
-  createdAt: Date;
 }
 
 export interface Warehouse {
-  id: number;
-  name: string;
+  id: string;
   capacity: number;
-  location: string;
-  usedSpace: number;
-  availableSpace: number;
-}
-
-export interface InventoryItem {
-  id: number;
   name: string;
-  quantity: number;
-  categoryId: number;
-  categoryName: string;
-  warehouseId: number;
-  warehouseName: string;
-  location: string;
-  lastUpdated: Date;
 }
 
-export interface Shipment {
-  id: number;
-  itemId: number;
-  itemName: string;
-  quantity: number;
-  origin: string;
-  destination: string;
-  status: 'dispatched' | 'pending' | 'delivered';
-  departureDate: Date;
-  estimatedArrival: Date;
+export interface MaintenanceTask {
+  id: string;
+  equipmentId: string;
+  equipmentName: string;
+  type: string;
+  description: string;
+  assignedTo: string;
+  scheduledDate: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
 }
 
 export interface Equipment {
-  id: number;
+  id: string;
   name: string;
   type: string;
-  status: 'operational' | 'maintenance' | 'out-of-service';
-  lastMaintenanceDate: Date;
-  nextMaintenanceDate: Date;
+  location: string;
+  lastMaintenance: string;
+  status: 'operational' | 'maintenance' | 'broken';
 }
 
-export interface MaintenanceRecord {
-  id: number;
-  equipmentId: number;
-  equipmentName: string;
-  type: 'routine' | 'repair' | 'inspection';
-  status: 'pending' | 'in-progress' | 'completed';
-  startDate: Date;
-  endDate: Date | null;
-  notes: string;
+export interface Shipment {
+  id: string;
+  origin: string;
+  destination: string;
+  items: { itemId: string; itemName: string; quantity: number }[];
+  status: 'pending' | 'in_transit' | 'delivered';
+  carrier: string;
+  trackingNumber: string;
+  departureDate: string;
+  estimatedArrival: string;
+  priority: 'standard' | 'express' | 'rush';
 }
 
-export interface PerformanceMetric {
-  id: number;
-  name: string;
-  value: number;
-  target: number;
-  unit: string;
-  period: string;
-  trend: 'up' | 'down' | 'stable';
-  date: Date;
-}
+// Mock data providers
+let inventoryItems: InventoryItem[] = [
+  {
+    id: "1",
+    name: "Smartphone X500",
+    quantity: 150,
+    categoryId: "1",
+    categoryName: "Electronics",
+    warehouseId: "1",
+    warehouseName: "Main Storage",
+    location: "Rack A-123",
+    lastUpdated: "2023-09-15 14:30:22",
+  },
+  {
+    id: "2",
+    name: "Office Chair",
+    quantity: 30,
+    categoryId: "2",
+    categoryName: "Furniture",
+    warehouseId: "1",
+    warehouseName: "Main Storage",
+    location: "Floor B-Zone 3",
+    lastUpdated: "2023-08-20 09:15:10",
+  },
+  {
+    id: "3",
+    name: "Summer T-Shirt",
+    quantity: 500,
+    categoryId: "3",
+    categoryName: "Clothing",
+    warehouseId: "2",
+    warehouseName: "Fashion Warehouse",
+    location: "Shelf C-78",
+    lastUpdated: "2023-09-10 16:45:30",
+  },
+  {
+    id: "4",
+    name: "USB-C Cable",
+    quantity: 300,
+    categoryId: "1",
+    categoryName: "Electronics",
+    warehouseId: "1",
+    warehouseName: "Main Storage",
+    location: "Rack A-45",
+    lastUpdated: "2023-09-08 11:20:15",
+  },
+  {
+    id: "5",
+    name: "Organic Apples",
+    quantity: 200,
+    categoryId: "4",
+    categoryName: "Food",
+    warehouseId: "3",
+    warehouseName: "Cold Storage",
+    location: "Fridge 12",
+    lastUpdated: "2023-09-18 08:30:00",
+  },
+];
 
-// Simulated data fetching functions with Supabase integration
+let categories: Category[] = [
+  { id: "1", name: "Electronics" },
+  { id: "2", name: "Furniture" },
+  { id: "3", name: "Clothing" },
+  { id: "4", name: "Food" },
+  { id: "5", name: "Other" },
+];
+
+let warehouses: Warehouse[] = [
+  { id: "1", name: "Main Storage", capacity: 2000 },
+  { id: "2", name: "Fashion Warehouse", capacity: 1500 },
+  { id: "3", name: "Cold Storage", capacity: 1000 },
+];
+
+let equipment: Equipment[] = [
+  {
+    id: 'EQ-1001',
+    name: 'Forklift 1',
+    type: 'Forklift',
+    location: 'Main Storage - Zone A',
+    lastMaintenance: '2023-08-15',
+    status: 'operational',
+  },
+  {
+    id: 'EQ-1002',
+    name: 'Conveyor Belt System',
+    type: 'Conveyor',
+    location: 'Main Storage - Loading Area',
+    lastMaintenance: '2023-09-01',
+    status: 'maintenance',
+  },
+  {
+    id: 'EQ-1003',
+    name: 'Pallet Jack 3',
+    type: 'Pallet Jack',
+    location: 'Fashion Warehouse',
+    lastMaintenance: '2023-07-22',
+    status: 'broken',
+  },
+];
+
+let maintenanceTasks: MaintenanceTask[] = [
+  {
+    id: 'MT-1001',
+    equipmentId: 'EQ-1002',
+    equipmentName: 'Conveyor Belt System',
+    type: 'Preventive',
+    description: 'Regular inspection and belt adjustment',
+    assignedTo: 'John Doe',
+    scheduledDate: '2023-09-20',
+    status: 'in_progress',
+    priority: 'medium',
+    createdAt: '2023-09-18',
+  },
+  {
+    id: 'MT-1002',
+    equipmentId: 'EQ-1003',
+    equipmentName: 'Pallet Jack 3',
+    type: 'Corrective',
+    description: 'Repair hydraulic system',
+    assignedTo: 'Mike Johnson',
+    scheduledDate: '2023-09-22',
+    status: 'pending',
+    priority: 'high',
+    createdAt: '2023-09-17',
+  },
+];
+
+let shipments: Shipment[] = [
+  {
+    id: "SH-1001",
+    origin: "Main Storage",
+    destination: "Retail Store #123",
+    items: [
+      { itemId: "1", itemName: "Smartphone X500", quantity: 20 },
+      { itemId: "4", itemName: "USB-C Cable", quantity: 50 }
+    ],
+    status: "in_transit",
+    carrier: "FastShip Inc.",
+    trackingNumber: "FS23945832",
+    departureDate: "2023-09-15",
+    estimatedArrival: "2023-09-18",
+    priority: "standard"
+  },
+  {
+    id: "SH-1002",
+    origin: "Fashion Warehouse",
+    destination: "Online Fulfillment Center",
+    items: [
+      { itemId: "3", itemName: "Summer T-Shirt", quantity: 100 }
+    ],
+    status: "pending",
+    carrier: "QuickLogistics",
+    trackingNumber: "QL77823164",
+    departureDate: "2023-09-20",
+    estimatedArrival: "2023-09-22",
+    priority: "express"
+  }
+];
+
+// API methods
+
+// Inventory
 export const fetchInventoryItems = async (): Promise<InventoryItem[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('inventory').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    // For now, we'll return mock data
-    return mockInventoryItems;
-  } catch (error) {
-    console.error('Error fetching inventory items:', error);
-    return mockInventoryItems;
-  }
+  return [...inventoryItems];
 };
 
+export const addInventoryItem = async (item: Omit<InventoryItem, 'id' | 'lastUpdated'>): Promise<InventoryItem> => {
+  const now = new Date();
+  const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}`;
+  
+  const newItem: InventoryItem = {
+    ...item,
+    id: `${inventoryItems.length + 1}`,
+    lastUpdated: formattedDate,
+  };
+  
+  inventoryItems.push(newItem);
+  return newItem;
+};
+
+export const updateInventoryItem = async (id: string, item: Partial<InventoryItem>): Promise<InventoryItem> => {
+  const now = new Date();
+  const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}`;
+  
+  const index = inventoryItems.findIndex(i => i.id === id);
+  if (index === -1) throw new Error("Item not found");
+  
+  const updatedItem = {
+    ...inventoryItems[index],
+    ...item,
+    lastUpdated: formattedDate
+  };
+  
+  inventoryItems[index] = updatedItem;
+  return updatedItem;
+};
+
+export const deleteInventoryItem = async (id: string): Promise<void> => {
+  inventoryItems = inventoryItems.filter(item => item.id !== id);
+};
+
+// Categories
 export const fetchCategories = async (): Promise<Category[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('categories').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockCategories;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    return mockCategories;
-  }
+  return [...categories];
 };
 
+export const addCategory = async (category: Omit<Category, 'id'>): Promise<Category> => {
+  const newCategory = {
+    ...category,
+    id: `${categories.length + 1}`,
+  };
+  
+  categories.push(newCategory);
+  return newCategory;
+};
+
+// Warehouses
 export const fetchWarehouses = async (): Promise<Warehouse[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('warehouses').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockWarehouses;
-  } catch (error) {
-    console.error('Error fetching warehouses:', error);
-    return mockWarehouses;
-  }
+  return [...warehouses];
 };
 
-export const fetchShipments = async (): Promise<Shipment[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('shipments').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockShipments;
-  } catch (error) {
-    console.error('Error fetching shipments:', error);
-    return mockShipments;
-  }
+export const addWarehouse = async (warehouse: Omit<Warehouse, 'id'>): Promise<Warehouse> => {
+  const newWarehouse = {
+    ...warehouse,
+    id: `${warehouses.length + 1}`,
+  };
+  
+  warehouses.push(newWarehouse);
+  return newWarehouse;
 };
 
+// Equipment
 export const fetchEquipment = async (): Promise<Equipment[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('equipment').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockEquipment;
-  } catch (error) {
-    console.error('Error fetching equipment:', error);
-    return mockEquipment;
-  }
+  return [...equipment];
 };
 
-export const fetchMaintenanceRecords = async (): Promise<MaintenanceRecord[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('maintenance_records').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockMaintenanceRecords;
-  } catch (error) {
-    console.error('Error fetching maintenance records:', error);
-    return mockMaintenanceRecords;
-  }
+export const addEquipment = async (item: Omit<Equipment, 'id'>): Promise<Equipment> => {
+  const newItem = {
+    ...item,
+    id: `EQ-${1000 + equipment.length + 1}`,
+  };
+  
+  equipment.push(newItem);
+  return newItem;
 };
 
-export const fetchPerformanceMetrics = async (): Promise<PerformanceMetric[]> => {
-  try {
-    // In a real app, this would be a real Supabase query
-    // const { data, error } = await supabase.from('performance_metrics').select('*');
-    // if (error) throw error;
-    // return data;
-    
-    return mockPerformanceMetrics;
-  } catch (error) {
-    console.error('Error fetching performance metrics:', error);
-    return mockPerformanceMetrics;
-  }
+// Maintenance
+export const fetchMaintenanceRecords = async (): Promise<MaintenanceTask[]> => {
+  return [...maintenanceTasks];
 };
 
-// Mock data
-const mockCategories: Category[] = [
-  { id: 1, name: 'Electronics', description: 'Electronic devices and components', createdAt: new Date('2023-01-15') },
-  { id: 2, name: 'Furniture', description: 'Office and home furniture', createdAt: new Date('2023-02-10') },
-  { id: 3, name: 'Clothing', description: 'Apparel and accessories', createdAt: new Date('2023-03-05') },
-  { id: 4, name: 'Food & Beverage', description: 'Consumable products', createdAt: new Date('2023-04-20') },
-  { id: 5, name: 'Automotive', description: 'Vehicle parts and accessories', createdAt: new Date('2023-05-12') },
-];
+export const addMaintenanceTask = async (task: Omit<MaintenanceTask, 'id' | 'createdAt'>): Promise<MaintenanceTask> => {
+  const now = new Date();
+  const formattedDate = now.toISOString().split('T')[0];
+  
+  const newTask = {
+    ...task,
+    id: `MT-${1000 + maintenanceTasks.length + 1}`,
+    createdAt: formattedDate,
+  };
+  
+  maintenanceTasks.push(newTask);
+  return newTask;
+};
 
-const mockWarehouses: Warehouse[] = [
-  { id: 1, name: 'North Distribution Center', capacity: 10000, location: 'Seattle, WA', usedSpace: 7500, availableSpace: 2500 },
-  { id: 2, name: 'East Regional Warehouse', capacity: 15000, location: 'Boston, MA', usedSpace: 10000, availableSpace: 5000 },
-  { id: 3, name: 'Central Storage Facility', capacity: 20000, location: 'Chicago, IL', usedSpace: 18000, availableSpace: 2000 },
-  { id: 4, name: 'South Fulfillment Center', capacity: 12000, location: 'Atlanta, GA', usedSpace: 6000, availableSpace: 6000 },
-  { id: 5, name: 'West Coast Storage', capacity: 18000, location: 'Los Angeles, CA', usedSpace: 15000, availableSpace: 3000 },
-];
+// Shipments
+export const fetchShipments = async (): Promise<Shipment[]> => {
+  return [...shipments];
+};
 
-const mockInventoryItems: InventoryItem[] = [
-  { id: 1, name: 'Laptop', quantity: 150, categoryId: 1, categoryName: 'Electronics', warehouseId: 1, warehouseName: 'North Distribution Center', location: 'Rack A-1', lastUpdated: new Date('2023-10-15') },
-  { id: 2, name: 'Office Chair', quantity: 75, categoryId: 2, categoryName: 'Furniture', warehouseId: 3, warehouseName: 'Central Storage Facility', location: 'Section B-2', lastUpdated: new Date('2023-10-12') },
-  { id: 3, name: 'T-shirt', quantity: 500, categoryId: 3, categoryName: 'Clothing', warehouseId: 4, warehouseName: 'South Fulfillment Center', location: 'Zone C-3', lastUpdated: new Date('2023-10-10') },
-  { id: 4, name: 'Coffee Beans', quantity: 200, categoryId: 4, categoryName: 'Food & Beverage', warehouseId: 2, warehouseName: 'East Regional Warehouse', location: 'Shelf D-4', lastUpdated: new Date('2023-10-05') },
-  { id: 5, name: 'Brake Pads', quantity: 300, categoryId: 5, categoryName: 'Automotive', warehouseId: 5, warehouseName: 'West Coast Storage', location: 'Bin E-5', lastUpdated: new Date('2023-09-30') },
-  { id: 6, name: 'Smartphone', quantity: 100, categoryId: 1, categoryName: 'Electronics', warehouseId: 1, warehouseName: 'North Distribution Center', location: 'Rack A-2', lastUpdated: new Date('2023-10-14') },
-  { id: 7, name: 'Desk', quantity: 50, categoryId: 2, categoryName: 'Furniture', warehouseId: 3, warehouseName: 'Central Storage Facility', location: 'Section B-3', lastUpdated: new Date('2023-10-11') },
-  { id: 8, name: 'Jeans', quantity: 350, categoryId: 3, categoryName: 'Clothing', warehouseId: 4, warehouseName: 'South Fulfillment Center', location: 'Zone C-4', lastUpdated: new Date('2023-10-09') },
-];
+export const addShipment = async (shipment: Omit<Shipment, 'id'>): Promise<Shipment> => {
+  const newShipment = {
+    ...shipment,
+    id: `SH-${1000 + shipments.length + 1}`,
+  };
+  
+  shipments.push(newShipment);
+  return newShipment;
+};
 
-const mockShipments: Shipment[] = [
-  { id: 1, itemId: 1, itemName: 'Laptop', quantity: 30, origin: 'North Distribution Center', destination: 'TechStore NYC', status: 'dispatched', departureDate: new Date('2023-10-10'), estimatedArrival: new Date('2023-10-15') },
-  { id: 2, itemId: 3, itemName: 'T-shirt', quantity: 100, origin: 'South Fulfillment Center', destination: 'Fashion Outlet Miami', status: 'pending', departureDate: new Date('2023-10-18'), estimatedArrival: new Date('2023-10-22') },
-  { id: 3, itemId: 5, itemName: 'Brake Pads', quantity: 50, origin: 'West Coast Storage', destination: 'AutoShop LA', status: 'delivered', departureDate: new Date('2023-10-05'), estimatedArrival: new Date('2023-10-08') },
-  { id: 4, itemId: 4, itemName: 'Coffee Beans', quantity: 20, origin: 'East Regional Warehouse', destination: 'CoffeeHouse Boston', status: 'dispatched', departureDate: new Date('2023-10-12'), estimatedArrival: new Date('2023-10-14') },
-  { id: 5, itemId: 2, itemName: 'Office Chair', quantity: 15, origin: 'Central Storage Facility', destination: 'Corporate Office Chicago', status: 'pending', departureDate: new Date('2023-10-20'), estimatedArrival: new Date('2023-10-21') },
-];
+// Search functionality
+export const searchInventory = async (query: string): Promise<InventoryItem[]> => {
+  const lowercaseQuery = query.toLowerCase();
+  return inventoryItems.filter(item => 
+    item.name.toLowerCase().includes(lowercaseQuery) ||
+    item.categoryName.toLowerCase().includes(lowercaseQuery) ||
+    item.warehouseName.toLowerCase().includes(lowercaseQuery) ||
+    item.location.toLowerCase().includes(lowercaseQuery)
+  );
+};
 
-const mockEquipment: Equipment[] = [
-  { id: 1, name: 'Forklift A', type: 'Heavy Equipment', status: 'operational', lastMaintenanceDate: new Date('2023-09-15'), nextMaintenanceDate: new Date('2023-12-15') },
-  { id: 2, name: 'Conveyor Belt 1', type: 'Conveyor System', status: 'maintenance', lastMaintenanceDate: new Date('2023-10-01'), nextMaintenanceDate: new Date('2023-10-15') },
-  { id: 3, name: 'Pallet Jack B', type: 'Manual Equipment', status: 'operational', lastMaintenanceDate: new Date('2023-09-20'), nextMaintenanceDate: new Date('2023-11-20') },
-  { id: 4, name: 'Scanner System', type: 'Electronic Equipment', status: 'out-of-service', lastMaintenanceDate: new Date('2023-08-10'), nextMaintenanceDate: new Date('2023-10-10') },
-  { id: 5, name: 'Forklift B', type: 'Heavy Equipment', status: 'operational', lastMaintenanceDate: new Date('2023-09-25'), nextMaintenanceDate: new Date('2023-12-25') },
-];
+export const searchEquipment = async (query: string): Promise<Equipment[]> => {
+  const lowercaseQuery = query.toLowerCase();
+  return equipment.filter(item => 
+    item.name.toLowerCase().includes(lowercaseQuery) ||
+    item.type.toLowerCase().includes(lowercaseQuery) ||
+    item.location.toLowerCase().includes(lowercaseQuery)
+  );
+};
 
-const mockMaintenanceRecords: MaintenanceRecord[] = [
-  { id: 1, equipmentId: 2, equipmentName: 'Conveyor Belt 1', type: 'repair', status: 'in-progress', startDate: new Date('2023-10-01'), endDate: null, notes: 'Belt motor replacement' },
-  { id: 2, equipmentId: 4, equipmentName: 'Scanner System', type: 'repair', status: 'pending', startDate: new Date('2023-10-10'), endDate: null, notes: 'System calibration required' },
-  { id: 3, equipmentId: 1, equipmentName: 'Forklift A', type: 'routine', status: 'completed', startDate: new Date('2023-09-15'), endDate: new Date('2023-09-15'), notes: 'Regular oil change and inspection' },
-  { id: 4, equipmentId: 3, equipmentName: 'Pallet Jack B', type: 'inspection', status: 'completed', startDate: new Date('2023-09-20'), endDate: new Date('2023-09-20'), notes: 'Annual safety inspection' },
-  { id: 5, equipmentId: 5, equipmentName: 'Forklift B', type: 'routine', status: 'completed', startDate: new Date('2023-09-25'), endDate: new Date('2023-09-25'), notes: 'Regular oil change and inspection' },
-];
-
-const mockPerformanceMetrics: PerformanceMetric[] = [
-  { id: 1, name: 'Inventory Turnover Rate', value: 4.3, target: 5.0, unit: 'ratio', period: 'Q3 2023', trend: 'up', date: new Date('2023-10-01') },
-  { id: 2, name: 'Warehouse Utilization', value: 78, target: 85, unit: '%', period: 'Q3 2023', trend: 'stable', date: new Date('2023-10-01') },
-  { id: 3, name: 'Order Fulfillment Rate', value: 94, target: 98, unit: '%', period: 'Q3 2023', trend: 'up', date: new Date('2023-10-01') },
-  { id: 4, name: 'Shipment On-Time Rate', value: 87, target: 95, unit: '%', period: 'Q3 2023', trend: 'down', date: new Date('2023-10-01') },
-  { id: 5, name: 'Equipment Downtime', value: 3.5, target: 2.0, unit: '%', period: 'Q3 2023', trend: 'down', date: new Date('2023-10-01') },
-  { id: 6, name: 'Inventory Accuracy', value: 96, target: 99, unit: '%', period: 'Q3 2023', trend: 'stable', date: new Date('2023-10-01') },
-];
+export const searchMaintenanceTasks = async (query: string): Promise<MaintenanceTask[]> => {
+  const lowercaseQuery = query.toLowerCase();
+  return maintenanceTasks.filter(task => 
+    task.equipmentName.toLowerCase().includes(lowercaseQuery) ||
+    task.description.toLowerCase().includes(lowercaseQuery) ||
+    task.assignedTo.toLowerCase().includes(lowercaseQuery)
+  );
+};
