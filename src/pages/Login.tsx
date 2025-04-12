@@ -26,9 +26,9 @@ const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (error) {
       toast({
-        title: 'Login failed',
-        description: 'Invalid email or password. Please try again.',
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Login failed",
+        description: "Invalid email or password. Please try again.",
       });
       console.error('Login error:', error);
     } finally {

@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart, Box, Calendar, ChevronLeft, ChevronRight, 
-  ClipboardList, Home, Package, Settings, ShieldCheck, Truck, Warehouse, LogOut 
+  BarChart, Box, ChevronLeft, ChevronRight, 
+  Home, LogOut, ShieldCheck, Truck, Warehouse 
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -11,7 +11,6 @@ import { toast } from '@/hooks/use-toast';
 const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
 
   const navigationItems = [

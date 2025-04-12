@@ -36,11 +36,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="app flex h-screen w-full overflow-hidden">
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={
+            isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
+          } />
+          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
           <Route path="*" element={
             <ProtectedRoute>
               <div className="flex h-full w-full">
@@ -49,13 +54,13 @@ function App() {
                   <Header />
                   <div className="flex-1 overflow-auto p-4">
                     <Routes>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/inventory" element={<Inventory />} />
                       <Route path="/shipment" element={<Shipment />} />
                       <Route path="/maintenance" element={<Maintenance />} />
                       <Route path="/space" element={<Space />} />
                       <Route path="/performance" element={<Performance />} />
+                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
                   </div>
                 </div>
