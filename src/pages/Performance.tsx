@@ -1,320 +1,376 @@
-import React, { useState } from 'react';
-import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
-import { Check, Download, TrendingUp } from 'lucide-react';
-import { exportToExcel, formatPerformanceDataForExport } from '@/utils/exportUtils';
+
+import React, { useState, useEffect } from 'react';
+import { 
+  BarChart3, 
+  Plus, 
+  Download, 
+  TrendingUp, 
+  TrendingDown,
+  Clock,
+  LineChart,
+  User
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-// Sample performance data
-const inventoryPerformance = [
-  { month: 'Jan', turnover: 2.3, value: 152000 },
-  { month: 'Feb', turnover: 2.5, value: 145000 },
-  { month: 'Mar', turnover: 2.8, value: 138000 },
-  { month: 'Apr', turnover: 3.1, value: 130000 },
-  { month: 'May', turnover: 3.4, value: 125000 },
-  { month: 'Jun', turnover: 3.6, value: 120000 },
-];
-
-const spaceUtilization = [
-  { warehouse: 'Main Storage', utilization: 78 },
-  { warehouse: 'Fashion Warehouse', utilization: 85 },
-  { warehouse: 'Cold Storage', utilization: 62 },
-  { warehouse: 'Electronics Depot', utilization: 90 },
-  { warehouse: 'Furniture Storage', utilization: 72 },
-];
-
-const shipmentPerformance = [
-  { month: 'Jan', onTime: 88, late: 12 },
-  { month: 'Feb', onTime: 85, late: 15 },
-  { month: 'Mar', onTime: 90, late: 10 },
-  { month: 'Apr', onTime: 92, late: 8 },
-  { month: 'May', onTime: 94, late: 6 },
-  { month: 'Jun', onTime: 95, late: 5 },
-];
-
-const maintenancePerformance = [
-  { status: 'Completed', value: 68 },
-  { status: 'In Progress', value: 22 },
-  { status: 'Pending', value: 10 },
-];
-
-const kpis = [
-  { name: 'Inventory Accuracy', value: '97.8%', change: '+1.2%', trend: 'up' },
-  { name: 'Order Fulfillment Rate', value: '94.6%', change: '+2.5%', trend: 'up' },
-  { name: 'On-Time Delivery', value: '92.3%', change: '+3.1%', trend: 'up' },
-  { name: 'Space Utilization', value: '78.5%', change: '+4.2%', trend: 'up' },
-  { name: 'Equipment Uptime', value: '95.7%', change: '+0.8%', trend: 'up' },
-  { name: 'Labor Efficiency', value: '88.3%', change: '+2.7%', trend: 'up' },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+import PerformanceForm from '@/components/performance/PerformanceForm';
 
 const Performance: React.FC = () => {
-  const [timeRange, setTimeRange] = useState('6months');
+  const [reports, setReports] = useState<any[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   
-  const handleExport = () => {
-    // Format KPIs for export
-    const kpiData = kpis.map(kpi => ({
-      Metric: kpi.name,
-      Value: kpi.value,
-      Change: kpi.change,
-      Trend: kpi.trend
-    }));
+  // Generate mock reports data
+  useEffect(() => {
+    const mockReports = [
+      {
+        id: 'PR-1001',
+        title: 'Q3 Logistics Performance',
+        description: 'Quarterly review of logistics operations performance',
+        type: 'report',
+        startDate: '2023-07-01',
+        endDate: '2023-09-30',
+        createdAt: '2023-10-05',
+        department: 'logistics',
+        status: 'completed',
+        metrics: {
+          efficiency: 87,
+          costReduction: 12.5,
+          deliveryTime: -8.3,
+        },
+      },
+      {
+        id: 'PR-1002',
+        title: 'Inventory Turnover Analysis',
+        description: 'Analysis of inventory turnover rates by product category',
+        type: 'analysis',
+        startDate: '2023-06-15',
+        endDate: '2023-09-15',
+        createdAt: '2023-09-25',
+        department: 'inventory',
+        status: 'completed',
+        metrics: {
+          efficiency: 92,
+          costReduction: 7.8,
+          deliveryTime: -5.2,
+        },
+      },
+      {
+        id: 'PR-1003',
+        title: 'Warehouse Space Utilization',
+        description: 'Monthly review of warehouse space utilization',
+        type: 'kpi',
+        startDate: '2023-09-01',
+        endDate: '2023-09-30',
+        createdAt: '2023-10-02',
+        department: 'warehouse',
+        status: 'in_progress',
+        metrics: {
+          efficiency: 78,
+          costReduction: 5.1,
+          deliveryTime: -3.8,
+        },
+      },
+    ];
     
-    // Export data
-    try {
-      exportToExcel(kpiData, `performance_report_${new Date().toISOString().split('T')[0]}`);
-      toast({
-        title: "Export Successful",
-        description: "The performance report has been downloaded.",
-      });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: "Unable to export data. Please try again.",
-        variant: "destructive"
-      });
+    setReports(mockReports);
+  }, []);
+
+  const handleCreateReport = (data: any) => {
+    const newReport = {
+      id: `PR-${1000 + reports.length + 1}`,
+      ...data,
+      createdAt: new Date().toISOString().split('T')[0],
+      status: 'pending',
+      metrics: {
+        efficiency: Math.floor(Math.random() * 20) + 70,
+        costReduction: Math.floor(Math.random() * 10) + 5,
+        deliveryTime: -(Math.floor(Math.random() * 5) + 2),
+      },
+    };
+    
+    setReports([...reports, newReport]);
+    
+    toast({
+      title: 'Report Created',
+      description: `${data.title} has been created successfully.`,
+    });
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+  
+  // Get type badge class
+  const getTypeBadgeClass = (type: string) => {
+    switch (type) {
+      case 'report': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'kpi': return 'bg-green-100 text-green-800 border-green-200';
+      case 'analysis': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'comparison': return 'bg-orange-100 text-orange-800 border-orange-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+  
+  // Get status badge class
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
   
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold">Performance Analytics</h1>
+          <h1 className="text-2xl font-semibold">Performance Management</h1>
           <p className="text-muted-foreground">
-            Monitor key metrics and track performance across all departments
+            Monitor and analyze logistics performance metrics
           </p>
         </div>
         
-        <div className="flex space-x-3">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 rounded-lg border bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="px-4 py-2 rounded-lg bg-primary text-white flex items-center space-x-2 hover:bg-primary/90 transition-colors"
           >
-            <option value="1month">Last Month</option>
-            <option value="3months">Last 3 Months</option>
-            <option value="6months">Last 6 Months</option>
-            <option value="1year">Last Year</option>
-          </select>
-          
-          <button 
-            onClick={handleExport}
-            className="px-4 py-2 rounded-lg border bg-white hover:bg-secondary transition-colors flex items-center space-x-2"
-          >
-            <Download size={16} />
-            <span>Export</span>
+            <Plus size={18} />
+            <span>Create Report</span>
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {kpis.map((kpi, index) => (
-          <div key={index} className="glass-card rounded-xl p-6">
-            <div className="flex flex-col">
-              <p className="text-sm font-medium text-muted-foreground">{kpi.name}</p>
-              <div className="flex items-baseline space-x-2 mt-1">
-                <h3 className="text-3xl font-bold">{kpi.value}</h3>
-                <span className={`flex items-center text-sm font-medium ${
-                  kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {kpi.trend === 'up' ? (
-                    <TrendingUp size={14} className="mr-1" />
-                  ) : (
-                    <TrendingUp size={14} className="mr-1 transform rotate-180" />
-                  )}
-                  {kpi.change}
-                </span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="glass-card rounded-xl p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Operational Efficiency</p>
+              <h3 className="text-2xl font-bold mt-1">85.7%</h3>
+              <div className="flex items-center mt-1 text-green-600">
+                <TrendingUp size={16} className="mr-1" />
+                <span className="text-xs font-medium">+2.4%</span>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Inventory Turnover & Value</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={inventoryPerformance}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                <Tooltip />
-                <Legend />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="turnover"
-                  stroke="#8884d8"
-                  name="Inventory Turnover"
-                  strokeWidth={2}
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#82ca9d"
-                  name="Inventory Value ($)"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="p-3 rounded-lg bg-primary/10">
+              <BarChart3 size={24} className="text-primary" />
+            </div>
           </div>
         </div>
         
         <div className="glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Space Utilization by Warehouse</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={spaceUtilization}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="warehouse" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend />
-                <Bar dataKey="utilization" name="Utilization %" fill="#0088FE">
-                  {spaceUtilization.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`}
-                      fill={
-                        entry.utilization < 70 ? '#82ca9d' :
-                        entry.utilization < 90 ? '#8884d8' : '#ff8042'
-                      } 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Cost Reduction</p>
+              <h3 className="text-2xl font-bold mt-1">8.3%</h3>
+              <div className="flex items-center mt-1 text-green-600">
+                <TrendingUp size={16} className="mr-1" />
+                <span className="text-xs font-medium">+1.2%</span>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-primary/10">
+              <LineChart size={24} className="text-primary" />
+            </div>
           </div>
         </div>
         
         <div className="glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Shipment On-Time Performance</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={shipmentPerformance}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                stackOffset="expand"
-                layout="vertical"
-                barSize={30}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                <YAxis type="category" dataKey="month" />
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend />
-                <Bar dataKey="onTime" name="On-Time" stackId="a" fill="#82ca9d" />
-                <Bar dataKey="late" name="Late" stackId="a" fill="#ff8042" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Avg. Delivery Time</p>
+              <h3 className="text-2xl font-bold mt-1">-5.8%</h3>
+              <div className="flex items-center mt-1 text-green-600">
+                <TrendingDown size={16} className="mr-1" />
+                <span className="text-xs font-medium">Faster</span>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Clock size={24} className="text-primary" />
+            </div>
           </div>
         </div>
         
         <div className="glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Maintenance Task Status</h2>
-          <div className="h-80 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={maintenancePerformance}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {maintenancePerformance.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Team Productivity</p>
+              <h3 className="text-2xl font-bold mt-1">92.1%</h3>
+              <div className="flex items-center mt-1 text-green-600">
+                <TrendingUp size={16} className="mr-1" />
+                <span className="text-xs font-medium">+3.7%</span>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-primary/10">
+              <User size={24} className="text-primary" />
+            </div>
           </div>
         </div>
       </div>
       
       <div className="glass-card rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-6">Performance Improvement Recommendations</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              title: 'Optimize Inventory Levels',
-              description: 'Reduce excess inventory for fast-moving items to improve turnover ratio.',
-              impact: 'Medium',
-              effort: 'Low',
-            },
-            {
-              title: 'Reorganize Warehouse Layout',
-              description: 'Improve warehouse layout to increase utilization and reduce picking time.',
-              impact: 'High',
-              effort: 'Medium',
-            },
-            {
-              title: 'Implement Predictive Maintenance',
-              description: 'Use data to predict equipment failures before they occur.',
-              impact: 'High',
-              effort: 'High',
-            },
-            {
-              title: 'Streamline Shipping Processes',
-              description: 'Optimize shipping routes and consolidate shipments where possible.',
-              impact: 'Medium',
-              effort: 'Medium',
-            },
-            {
-              title: 'Staff Training Program',
-              description: 'Develop comprehensive training to improve staff efficiency.',
-              impact: 'Medium',
-              effort: 'Medium',
-            },
-            {
-              title: 'Automate Inventory Counting',
-              description: 'Implement RFID or barcode scanning for real-time inventory tracking.',
-              impact: 'High',
-              effort: 'High',
-            },
-          ].map((recommendation, index) => (
-            <div key={index} className="p-4 bg-secondary/30 rounded-lg">
-              <div className="flex items-start">
-                <div className="p-2 rounded-full bg-primary/10 mr-3">
-                  <Check size={16} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">{recommendation.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {recommendation.description}
-                  </p>
-                  <div className="flex items-center mt-2 text-xs">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 mr-2">
-                      Impact: {recommendation.impact}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-semibold">Performance Reports</h2>
+          <button
+            className="px-4 py-2 rounded-lg bg-secondary text-foreground flex items-center space-x-2 hover:bg-secondary/80 transition-colors"
+          >
+            <Download size={18} />
+            <span>Export All</span>
+          </button>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-secondary/50">
+                <th className="px-4 py-3 text-left text-sm font-medium">ID</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Title</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Department</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Date Range</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {reports.map(report => (
+                <tr key={report.id} className="hover:bg-secondary/30 transition-colors">
+                  <td className="px-4 py-3 text-sm font-medium">{report.id}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>
+                      <p className="font-medium">{report.title}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-xs">{report.description}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeClass(report.type)}`}>
+                      {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
                     </span>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-800">
-                      Effort: {recommendation.effort}
+                  </td>
+                  <td className="px-4 py-3 text-sm capitalize">{report.department}</td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatDate(report.startDate)} - {formatDate(report.endDate)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{formatDate(report.createdAt)}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClass(report.status)}`}>
+                      {report.status === 'in_progress' ? 'In Progress' : 
+                       report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <button className="p-1 rounded hover:bg-secondary" aria-label="View">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                      <button className="p-1 rounded hover:bg-secondary" aria-label="Download">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">
+                    No reports found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass-card rounded-xl p-6">
+          <h2 className="text-lg font-semibold mb-4">Performance Metrics</h2>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm">Warehouse Utilization</span>
+                <span className="text-sm font-medium">78%</span>
+              </div>
+              <div className="w-full bg-secondary/30 rounded-full h-2.5">
+                <div className="h-2.5 rounded-full bg-blue-500" style={{ width: '78%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm">Order Fulfillment Rate</span>
+                <span className="text-sm font-medium">92%</span>
+              </div>
+              <div className="w-full bg-secondary/30 rounded-full h-2.5">
+                <div className="h-2.5 rounded-full bg-green-500" style={{ width: '92%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm">Inventory Accuracy</span>
+                <span className="text-sm font-medium">95%</span>
+              </div>
+              <div className="w-full bg-secondary/30 rounded-full h-2.5">
+                <div className="h-2.5 rounded-full bg-green-500" style={{ width: '95%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm">Equipment Utilization</span>
+                <span className="text-sm font-medium">67%</span>
+              </div>
+              <div className="w-full bg-secondary/30 rounded-full h-2.5">
+                <div className="h-2.5 rounded-full bg-yellow-500" style={{ width: '67%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="glass-card rounded-xl p-6">
+          <h2 className="text-lg font-semibold mb-4">Recent Improvements</h2>
+          <div className="space-y-4">
+            {[
+              { 
+                title: 'Optimized Delivery Routes', 
+                description: 'Reduced fuel consumption by 12% through AI-powered route optimization',
+                improvement: '+12.3%'
+              },
+              { 
+                title: 'Warehouse Layout Redesign', 
+                description: 'Improved pick efficiency by 8.7% through strategic reorganization',
+                improvement: '+8.7%'
+              },
+              { 
+                title: 'Automated Inventory Counts', 
+                description: 'Reduced inventory count time by 45% through RFID implementation',
+                improvement: '+45%'
+              },
+            ].map((item, index) => (
+              <div key={index} className="p-3 rounded-lg hover:bg-secondary/50 transition-colors">
+                <div className="flex justify-between">
+                  <p className="font-medium">{item.title}</p>
+                  <span className="text-green-600 font-medium">{item.improvement}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <PerformanceForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleCreateReport}
+      />
     </div>
   );
 };
