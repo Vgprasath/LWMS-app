@@ -8,7 +8,7 @@ import {
   LineChart,
   User,
   FileSpreadsheet,
-  FilePdf
+  FileText
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import PerformanceForm from '@/components/performance/PerformanceForm';
@@ -314,7 +314,7 @@ const Performance: React.FC = () => {
                             <span>Excel</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleExportSingleReport(report, 'pdf')} className="cursor-pointer">
-                            <FilePdf className="mr-2 h-4 w-4" />
+                            <FileText className="mr-2 h-4 w-4" />
                             <span>PDF</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>

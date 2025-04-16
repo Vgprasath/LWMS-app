@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Download, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +72,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ data, fileName }) => {
           <span>Excel (.xlsx)</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleExportToPDF} className="cursor-pointer">
-          <FilePdf className="mr-2 h-4 w-4" />
+          <FileText className="mr-2 h-4 w-4" />
           <span>PDF (.pdf)</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
