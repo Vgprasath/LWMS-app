@@ -128,8 +128,18 @@ const Performance: React.FC = () => {
   
   const handleExportSingleReport = (report: any, format: 'excel' | 'pdf') => {
     try {
+      if (!report) {
+        toast({
+          variant: "destructive",
+          title: "Export Failed",
+          description: "No report data available to export.",
+        });
+        return;
+      }
+      
       const reportData = [report];
       const fileName = `Report-${report.id}`;
+      const columns = ['id', 'title', 'type', 'department', 'startDate', 'endDate', 'createdAt', 'status'];
       
       if (format === 'excel') {
         exportToExcel(reportData, fileName);
@@ -138,7 +148,6 @@ const Performance: React.FC = () => {
           description: `Report ${report.id} has been exported to Excel.`,
         });
       } else {
-        const columns = ['id', 'title', 'type', 'department', 'startDate', 'endDate', 'createdAt', 'status'];
         exportToPDF(reportData, fileName, columns);
         toast({
           title: "Export Successful",
@@ -146,10 +155,11 @@ const Performance: React.FC = () => {
         });
       }
     } catch (error) {
+      console.error(`Export to ${format} failed:`, error);
       toast({
         variant: "destructive",
         title: "Export Failed",
-        description: "There was an error exporting the report.",
+        description: `There was an error exporting the report to ${format.toUpperCase()}.`,
       });
     }
   };

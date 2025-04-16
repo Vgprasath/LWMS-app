@@ -24,6 +24,15 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ data, fileName }) => {
   
   const handleExportToExcel = () => {
     try {
+      if (!data || data.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Export Failed",
+          description: "No data available to export.",
+        });
+        return;
+      }
+      
       exportToExcel(data, fileName);
       toast({
         title: "Export Successful",
@@ -41,6 +50,15 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ data, fileName }) => {
   
   const handleExportToPDF = () => {
     try {
+      if (!data || data.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Export Failed",
+          description: "No data available to export.",
+        });
+        return;
+      }
+      
       exportToPDF(data, fileName, columns);
       toast({
         title: "Export Successful",
