@@ -17,10 +17,21 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, data } = await req.json();
+    const { prompt, data, timestamp } = await req.json();
 
-    // Prepare the context with warehouse data
-    const dataContext = JSON.stringify(data);
+    // Log when the request was received and when the data was last updated
+    console.log(`AI assistant request received. Data timestamp: ${timestamp}`);
+    
+    // Prepare the context with warehouse data and include timestamp information
+    const dataWithTimestamp = {
+      ...data,
+      _metadata: {
+        refreshed_at: timestamp,
+        request_time: new Date().toISOString()
+      }
+    };
+    
+    const dataContext = JSON.stringify(dataWithTimestamp);
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -37,6 +48,7 @@ serve(async (req) => {
             You help warehouse managers understand their data and generate insights.
             When asked about data, you'll analyze the provided warehouse data and suggest visualizations.
             Always be specific about what metrics would be most helpful to visualize.
+            Make sure to utilize the most recent data - check the "_metadata.refreshed_at" timestamp to confirm when data was last updated.
             Format your responses in markdown, including suggested chart configurations using Recharts syntax when appropriate.
             The data will be provided in the user's message.`
           },
@@ -60,7 +72,8 @@ serve(async (req) => {
     const aiResponse = data_response.choices[0].message.content;
 
     return new Response(JSON.stringify({ 
-      response: aiResponse 
+      response: aiResponse,
+      timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

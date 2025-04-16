@@ -26,6 +26,7 @@ const AIAssistant: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [warehouseData, setWarehouseData] = useState<any>(null);
   const [searchResults, setSearchResults] = useState<any>(null);
+  const [lastDataRefresh, setLastDataRefresh] = useState<Date>(new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
@@ -92,31 +93,38 @@ const AIAssistant: React.FC = () => {
   const suggestedPrompts = getPageSpecificPrompts();
 
   // Fetch warehouse data for AI analysis
+  const loadWarehouseData = async () => {
+    try {
+      console.log('AI Assistant: Refreshing warehouse data...');
+      const [inventory, warehouses, shipments, equipment, maintenance] = await Promise.all([
+        fetchInventoryItems(),
+        fetchWarehouses(),
+        fetchShipments(),
+        fetchEquipment(),
+        fetchMaintenanceRecords()
+      ]);
+      
+      setWarehouseData({
+        inventory,
+        warehouses,
+        shipments,
+        equipment,
+        maintenance
+      });
+      
+      setLastDataRefresh(new Date());
+      console.log('AI Assistant: Data refreshed at', new Date().toLocaleTimeString());
+    } catch (error) {
+      console.error("Error loading warehouse data for AI:", error);
+    }
+  };
+
+  // Initial data load when component mounts
   useEffect(() => {
-    const loadWarehouseData = async () => {
-      try {
-        const [inventory, warehouses, shipments, equipment, maintenance] = await Promise.all([
-          fetchInventoryItems(),
-          fetchWarehouses(),
-          fetchShipments(),
-          fetchEquipment(),
-          fetchMaintenanceRecords()
-        ]);
-        
-        setWarehouseData({
-          inventory,
-          warehouses,
-          shipments,
-          equipment,
-          maintenance
-        });
-      } catch (error) {
-        console.error("Error loading warehouse data for AI:", error);
-      }
-    };
-    
-    loadWarehouseData();
-  }, []);
+    if (isOpen) {
+      loadWarehouseData();
+    }
+  }, [isOpen]);
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -159,6 +167,9 @@ const AIAssistant: React.FC = () => {
     setIsTyping(true);
     
     try {
+      // Refresh data before processing the request to ensure we have the latest
+      await loadWarehouseData();
+      
       // In a real implementation, this would call the AI assistant edge function
       // For now, we'll simulate an intelligent response based on the query and available data
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -264,6 +275,8 @@ const AIAssistant: React.FC = () => {
         }
       } else if (userQuery.includes('export') || userQuery.includes('report') || userQuery.includes('download')) {
         aiResponse = "I can help you export data or generate reports. You can use the export button in each module to download the current data as an Excel file. What specific data would you like to export?";
+      } else if (userQuery.includes('refresh') || userQuery.includes('update') || userQuery.includes('latest')) {
+        aiResponse = `I've just refreshed all the warehouse data at ${lastDataRefresh.toLocaleTimeString()}. All my responses are now based on the most up-to-date information.`;
       } else {
         // General response for other queries
         aiResponse = "I'm here to help with your warehouse management needs. I can assist with inventory analysis, shipment tracking, maintenance scheduling, space optimization, and performance metrics. What would you like to focus on?";
@@ -360,6 +373,11 @@ const AIAssistant: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
           
+          {/* Last updated indicator */}
+          <div className="px-4 py-1 text-xs text-muted-foreground">
+            Data updated: {lastDataRefresh.toLocaleTimeString()}
+          </div>
+          
           {/* Suggested prompts */}
           <div className="px-4 pb-2">
             <div className="flex flex-wrap gap-2">
@@ -374,6 +392,17 @@ const AIAssistant: React.FC = () => {
               ))}
             </div>
           </div>
+          
+          {/* Refresh button */}
+          <button
+            onClick={loadWarehouseData}
+            className="mx-4 mb-2 text-xs text-primary hover:underline flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh data
+          </button>
           
           {/* Input */}
           <div className="p-3 border-t flex items-center gap-2">
