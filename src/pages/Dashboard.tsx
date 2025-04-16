@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardCards from '@/components/dashboard/DashboardCards';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
@@ -37,11 +36,14 @@ const Dashboard: React.FC = () => {
     activities: []
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
+      setError(null);
       try {
+        console.log('Fetching dashboard data...');
         const [inventory, warehouses, shipments, equipment, maintenance] = await Promise.all([
           fetchInventoryItems(),
           fetchWarehouses(),
@@ -50,6 +52,8 @@ const Dashboard: React.FC = () => {
           fetchMaintenanceRecords()
         ]);
 
+        console.log('Data fetched successfully');
+        
         const allActivities = [
           ...shipments.slice(0, 2).map(s => ({ 
             title: `New shipment created: ${s.origin} to ${s.destination}`,
@@ -88,6 +92,7 @@ const Dashboard: React.FC = () => {
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        setError('Failed to load dashboard data. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -112,6 +117,23 @@ const Dashboard: React.FC = () => {
     
     return `${days} days ago`;
   };
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <div className="glass-card rounded-xl p-6 text-center">
+          <p className="text-destructive">{error}</p>
+          <button 
+            onClick={() => setTimeRange(prev => prev)} 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">

@@ -55,11 +55,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check for existing session on component mount
     const checkSession = () => {
-      const storedUser = localStorage.getItem('logisticsUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      console.log("Checking session...");
+      try {
+        const storedUser = localStorage.getItem('logisticsUser');
+        if (storedUser) {
+          console.log("Found stored user:", storedUser);
+          setUser(JSON.parse(storedUser));
+        } else {
+          console.log("No stored user found");
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkSession();
@@ -67,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Login function
   const login = async (email: string, password: string) => {
+    console.log("Login attempt:", email);
     // Simulate API call
     return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
@@ -75,11 +85,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
 
         if (foundUser) {
+          console.log("Login successful for:", foundUser.email);
           const { password, ...userWithoutPassword } = foundUser;
           setUser(userWithoutPassword);
           localStorage.setItem('logisticsUser', JSON.stringify(userWithoutPassword));
           resolve();
         } else {
+          console.log("Login failed: Invalid credentials");
           reject(new Error('Invalid credentials'));
         }
       }, 800); // Simulate network delay
@@ -88,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Logout function
   const logout = () => {
+    console.log("Logging out user");
     setUser(null);
     localStorage.removeItem('logisticsUser');
   };
@@ -99,6 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     isAuthenticated: !!user,
   };
+
+  console.log("Auth context state:", { isAuthenticated: !!user, loading });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
