@@ -4,6 +4,8 @@
  */ 
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Function to generate a clean filename with current date
 export const generateFilename = (baseName: string): string => {
@@ -43,4 +45,41 @@ export const exportToJSON = (data: any[], fileName: string): void => {
   
   // Save the file
   saveAs(fileData, `${generateFilename(fileName)}.json`);
+};
+
+// Export data to PDF
+export const exportToPDF = (data: any[], fileName: string, columns: string[]): void => {
+  // Create new PDF document
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(16);
+  doc.text(`${fileName}`, 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+  
+  // Prepare data for table
+  const tableData = data.map(item => {
+    return columns.map(col => item[col] !== undefined ? String(item[col]) : '');
+  });
+  
+  // Column headers
+  const tableHeaders = columns.map(col => {
+    // Convert camelCase to Title Case
+    return col.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+  });
+  
+  // Add table to PDF
+  (doc as any).autoTable({
+    head: [tableHeaders],
+    body: tableData,
+    startY: 30,
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [66, 139, 202], textColor: 255 },
+    alternateRowStyles: { fillColor: [240, 240, 240] }
+  });
+  
+  // Save the PDF
+  doc.save(`${generateFilename(fileName)}.pdf`);
 };

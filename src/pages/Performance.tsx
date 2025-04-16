@@ -1,23 +1,31 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   Plus, 
-  Download, 
   TrendingUp, 
   TrendingDown,
   Clock,
   LineChart,
-  User
+  User,
+  FileSpreadsheet,
+  FilePdf
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import PerformanceForm from '@/components/performance/PerformanceForm';
+import ExportDropdown from '@/components/performance/ExportDropdown';
+import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const Performance: React.FC = () => {
   const [reports, setReports] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   
-  // Generate mock reports data
   useEffect(() => {
     const mockReports = [
       {
@@ -94,13 +102,11 @@ const Performance: React.FC = () => {
     });
   };
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
-  // Get type badge class
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
       case 'report': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -111,13 +117,40 @@ const Performance: React.FC = () => {
     }
   };
   
-  // Get status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+  
+  const handleExportSingleReport = (report: any, format: 'excel' | 'pdf') => {
+    try {
+      const reportData = [report];
+      const fileName = `Report-${report.id}`;
+      
+      if (format === 'excel') {
+        exportToExcel(reportData, fileName);
+        toast({
+          title: "Export Successful",
+          description: `Report ${report.id} has been exported to Excel.`,
+        });
+      } else {
+        const columns = ['id', 'title', 'type', 'department', 'startDate', 'endDate', 'createdAt', 'status'];
+        exportToPDF(reportData, fileName, columns);
+        toast({
+          title: "Export Successful",
+          description: `Report ${report.id} has been exported to PDF.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "There was an error exporting the report.",
+      });
     }
   };
   
@@ -211,12 +244,10 @@ const Performance: React.FC = () => {
       <div className="glass-card rounded-xl p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold">Performance Reports</h2>
-          <button
-            className="px-4 py-2 rounded-lg bg-secondary text-foreground flex items-center space-x-2 hover:bg-secondary/80 transition-colors"
-          >
-            <Download size={18} />
-            <span>Export All</span>
-          </button>
+          <ExportDropdown 
+            data={reports} 
+            fileName="Performance-Reports" 
+          />
         </div>
         
         <div className="overflow-x-auto">
@@ -267,13 +298,27 @@ const Performance: React.FC = () => {
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       </button>
-                      <button className="p-1 rounded hover:bg-secondary" aria-label="Download">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1 rounded hover:bg-secondary" aria-label="Download">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleExportSingleReport(report, 'excel')} className="cursor-pointer">
+                            <FileSpreadsheet className="mr-2 h-4 w-4" />
+                            <span>Excel</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExportSingleReport(report, 'pdf')} className="cursor-pointer">
+                            <FilePdf className="mr-2 h-4 w-4" />
+                            <span>PDF</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </td>
                 </tr>
